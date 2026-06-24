@@ -65,9 +65,13 @@ def parse_beishui(file_bytes, filename):
     invoice  = find([r'本期發票號碼[：:]\s*(\w+)\('])
     tax_m  = re.search(r'營業稅[：:]\s*(\d+\.?\d*)\)', text)
     tax    = int(float(tax_m.group(1))) if tax_m else 0
-    tot_m  = re.search(r'應繳總金額（元）Total Amount Due：\s*(\d+\.?\d*)', text)
+    tot_m = (re.search(r'應繳總金額（元）Total Amount Due：\s*(\d+\.?\d*)', text) or
+         re.search(r'Total Amount Due：\s*(\d+\.?\d*)', text) or
+         re.search(r'應繳總金額.*?：\s*(\d+\.?\d*)', text) or
+         re.search(r'\$(\d+)', text))
     total  = int(float(tot_m.group(1))) if tot_m else 0
-    addr_m = re.search(r'用水地址：(.+)', text)
+    addr_m = (re.search(r'用水地址：(.+)', text) or
+          re.search(r'Address of Water Consumption[)）]\s*\n(.+)', text))
     address = addr_m.group(1).strip() if addr_m else ''
     name_m = re.search(r'用戶姓名[：:](.+?)(?:\n|\(Customer)', text, re.DOTALL)
     name = name_m.group(1).replace('\n','').strip() if name_m else '大成鋼隆美家居室內裝修設計股份有限公司'
