@@ -1,0 +1,4 @@
+pdfplumber
+openpyxl
+xlwt
+pandas
