@@ -102,8 +102,15 @@ def parse_taishui(file_bytes, filename):
     tax     = int(float(tax_m.group(1))) if tax_m else 0
     tot_m   = re.search(r'代繳\(代收\)總金額\s+(\d+)元', text)
     total   = int(tot_m.group(1)) if tot_m else 0
-    addr_m  = re.search(r'用水地址\n(.+?)(?:\n單據號碼)', text, re.DOTALL)
-    address = addr_m.group(1).replace('\n','').strip() if addr_m else ''
+    addr_m = (re.search(r'用水地址\n(.+?)(?:\n單據號碼)', text, re.DOTALL) or
+          re.search(r'用水地址\s*\n([^\n]+(?:\n[^\n]+)?)\n*單據號碼', text) or
+          re.search(r'用水地址\n(.+)', text))
+    if addr_m:
+        address = addr_m.group(1).replace('\n','').strip()
+        # 去掉可能帶入的下一行雜訊
+        address = re.split(r'單據號碼|用戶營利', address)[0].strip()
+    else:
+        address = ''
     bc_m    = re.search(r'(\d{5})\s+(BB[A-Z0-9]{8})', text)
     inv_ym  = bc_m.group(1) if bc_m else ''
     carrier = bc_m.group(2) if bc_m else ''
