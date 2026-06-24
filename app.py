@@ -50,7 +50,8 @@ def parse_store(raw, cat_map):
 
 # ── PDF 解析 ──────────────────────────────────────────────────
 def parse_beishui(file_bytes, filename):
-    wn_m = re.search(r'北水_([A-Z0-9Y-]+)_\d', filename)
+    wn_m = (re.search(r'北水[_\(]([A-Z0-9Y0-9-]+)[_\)]\d', filename) or
+        re.search(r'北水([A-Z0-9Y][A-Z0-9-]+)\D*\d{6}', filename))
     water_no = wn_m.group(1).replace('-','') if wn_m else ''
     with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
         text = '\n'.join(p.extract_text() or '' for p in pdf.pages)
@@ -112,13 +113,21 @@ def process_pdf(file_bytes, filename):
     try:
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
             text = pdf.pages[0].extract_text() or ''
+        # 先用內文判斷
         if '臺北自來水事業處' in text:
             return parse_beishui(file_bytes, filename)
         elif '台灣自來水' in text:
             return parse_taishui(file_bytes, filename)
+        # 內文判斷失敗時用檔名判斷
+        elif '北水' in filename:
+            return parse_beishui(file_bytes, filename)
+        elif '台水' in filename:
+            return parse_taishui(file_bytes, filename)
         else:
+            st.warning(f"無法辨識（內文）：{filename}\n前100字：{text[:100]}")
             return None
-    except:
+    except Exception as e:
+        st.error(f"讀取失敗 {filename}：{e}")
         return None
 
 # ── 產出 Excel ────────────────────────────────────────────────
