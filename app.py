@@ -84,7 +84,7 @@ def parse_beishui(file_bytes, filename):
                 name=name, address=address)
 
 def parse_taishui(file_bytes, filename):
-    wn_m = re.search(r'台水([A-Z0-9]+)_\d', filename)
+    wn_m = re.search(r'台水([A-Z0-9]+)[_\(]', filename)
     water_no = wn_m.group(1) if wn_m else ''
     with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
         text = '\n'.join(p.extract_text() or '' for p in pdf.pages)
